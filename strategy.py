@@ -31,7 +31,7 @@ import pandas
 import get_data as gdt
 import sys
 import numpy as np
-import codecs as cs
+# import codecs as cs
 from var import VectorAutoRegression
 
 g_list = [0, 1, 1.285, 1.64, 1.96, 2.575, 3, 10]
