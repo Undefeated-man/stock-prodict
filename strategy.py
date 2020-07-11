@@ -31,6 +31,7 @@ import pandas
 import get_data as gdt
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 # import codecs as cs
 from var import VectorAutoRegression
 
@@ -48,20 +49,18 @@ def gaussian_p(x, data, id):
     z_score = (x-f_data["close"].mean())/f_data["close"].std()
     delta = np.array(data["close"].tolist()) - np.array(gdt.check_DATA[id]["close"].tolist())
     d = delta[0:-1] - delta[1:]
-    # input(np.array(data["close"].tolist()))
-    # input(np.array(gdt.check_DATA[id]["close"].tolist()))
     dz_score = (d[0] - d.mean())/d.std()
-    # input(dz_score)
-    if abs(z_score) > 10:
-        print("\n\t%s\n\n\t\t警告！！拟合失败，此次预测结果准确率极低，请注意！\n\n\t%s\n\n" % ("!!"*25, "!!"*25))
+    if abs(z_score) > 50:
+        print(z_score)
+        print("\n\t%s\n\n\t\t警告！！此次预测结果偏离中心较远，可能准确率较低，请注意！\n\n\t%s" % ("!!"*25, "!!"*25))
     else:
         for i in g_list:
             if abs(dz_score) < i:
-                print("\n\t代码%s的股票: 根据高斯导数验证模型估计, 预测准确率约为%s%%\n\n\n"%(id, p_list[g_list.index(i)-1]))
+                print("\n\t代码%s的股票: 根据高斯导数验证模型估计, 预测准确率约为%s%%"%(id, p_list[g_list.index(i)-1]))
                 break
             elif abs(dz_score) >= 10 and i == 10:
-                print("\n\t%s\n\n\t\t警告！！拟合失败，此次预测结果准确率极低，请注意！\n\n\t%s" % ("!!"*25, "!!"*25))   
-
+                print("\n\t%s\n\n\t\t警告！！拟合失败，此次预测结果准确率较低，请注意！\n\n\t%s" % ("!!"*25, "!!"*25))   
+    print("\n\t\t关闭图片窗口进入下一个预测\n\n%s\n"%("~~"*40))
 
 # 一次指数平滑预测法
 def first_exp(data):
@@ -127,6 +126,7 @@ def alarm(data):
         
 ALPHA = 2/ (gdt.ini_data["day_back"] + 1)
 
+
 # 生成训练数据
 def make_training_date(data, log_phaseP=1):
     x = [[] for p in range(log_phaseP)]
@@ -140,6 +140,7 @@ def make_training_date(data, log_phaseP=1):
             else:
                 x[j].append(0.0)
     return x, y
+
 
 # VAR模型生成
 def var(args, id):
@@ -158,3 +159,59 @@ def var(args, id):
     predict = model.predict(x)
     predict *= SCALE
     return predict[-1, 0, 0]
+
+
+# 作图器
+def plot2d(x_lst, y_lst, data, name_lst=["real data"], n_sub=(11), title=None):
+
+    """
+    
+    这是一个二维的画图器。
+    
+    Args:
+        x_lst是一个包含了所有要画的取线的x矩阵的列表。如要画3条线就有3个矩阵;
+        y_lst是一个包含了所有要画的取线的y矩阵的列表。如要画3条线就有3个矩阵;
+        n_sub是你要多少个子图(subplot)的数组。不画子图则可忽略此参数。
+        name_lst是每条曲线的名
+        title是整个图的标题，默认为无
+        
+    Returns:
+        不返回值，会绘制一个图表并显示出来
+    """
+    
+    line_lst = []
+    
+    # 只有一个图的情况
+    if n_sub == (11):
+        plt.figure("2D")       # 创建一个名字叫2D的图表
+        for x, y, name in zip(x_lst, y_lst, name_lst):
+            line, = plt.plot(x, y, ':', label = name, marker="o")
+            line_lst.append(line)
+        plt.legend(line_lst, name_lst, bbox_to_anchor=(0.3, 1), loc='lower right' )
+    
+        
+    # 有两个以上子图
+    else:
+        xp, yp = [int(i) for i in str(n_sub)]
+        for i in range(1, xp*yp+1):
+            plt.subplot(int(str(n_sub)+str(i)))
+            line, = plt.plot(x_lst[i-1], y_lst[i-1], label = name_lst[i-1])
+            line_lst.append(line)
+        plt.legend(line_lst, name_lst, bbox_to_anchor=(0.3, -0.35), loc='lower right' )
+    
+    # 显示网格线(alpha是透明度)
+    plt.grid(linestyle="--", alpha=0.5)
+    
+    # 添加标题
+    if title != None:
+        plt.title(title)
+    
+    # 修改x、y轴的刻度
+    xlabels = ["-".join(i.split("-")[1:]) for i in gdt.DATA[gdt.ini_data["stocks"][data]].index.values[::-1]]
+    plt.xticks(x_lst[0], xlabels, rotation=-75) # 加入字符刻度
+    # plt.yticks(range(2000, 8000, 500))     # 设置y轴范围
+    
+    
+    
+    # 显示图层
+    plt.show()

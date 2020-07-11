@@ -30,6 +30,7 @@
 import strategy as stg
 import get_data as gdt
 import sys
+import numpy as np
 
 # ESPM：指数平滑预测法
 # VAR: 向量自回归模型
@@ -42,17 +43,23 @@ for data in range(len(gdt.DATA)):
         result = stg.tri_exp(gdt.DATA[gdt.ini_data["stocks"][data]])
     elif gdt.ini_data["kernel"] == "VAR":
         result = stg.var(sys.argv, gdt.ini_data["stocks"][data])
+    
     # 打印结果
-    # input(gdt.DATA)
     if result > gdt.DATA[gdt.ini_data["stocks"][data]]["close"].tolist()[0]:
         R = "接下来股市应该会升"
     elif result == gdt.DATA[gdt.ini_data["stocks"][data]]["close"].tolist()[0]:
         R = "接下来股市应该会保持稳定"
     else:
         R = "接下来股市可能会跌"
-    print("\t%s\n\n\t\t代码为%s的股票接下来三天的趋势预测结果是：%.3f\n\t\t%s\n\n\t%s"%("**"*20, gdt.ini_data["stocks"][data], result, R, "**"*20))
+    print("\t%s\n\n\t\t代码为%s的股票接下来的趋势预测结果是：%.3f\n\t\t%s\n\n\t%s"%("**"*20, gdt.ini_data["stocks"][data], result, R, "**"*20))
     stg.gaussian_p(result, gdt.DATA[gdt.ini_data["stocks"][data]], gdt.ini_data["stocks"][data])
     # except:
     #     print("\n\t%s\n\n\t\t找不到该股票！\n\n\t%s" % ("!!"*20, "!!"*20))
-
-input()
+    
+    # 画图
+    length = len(gdt.DATA[gdt.ini_data["stocks"][data]]["close"])
+    x = [np.arange(length)]
+    y = [np.array(gdt.DATA[gdt.ini_data["stocks"][data]]["close"].tolist()[::-1])]
+    stg.plot2d(x, y, data, n_sub=(11), title=gdt.ini_data["stocks"][data])
+    
+    # input("按下任意键继续~~")

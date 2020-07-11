@@ -37,6 +37,7 @@ DATA = {}
 check_DATA = {}
 FULL_DATA = {}
 BT = 1
+AD = 0
 
 # 生成格式化日期
 def stfdate(ls):
@@ -44,9 +45,10 @@ def stfdate(ls):
 
 
 # 计算日期
-def day_range(n=0):
+def day_range(n=0, ad=0):
+    epsimon = ini_data["day_back"]//4 - 1
     ed = datetime.datetime.now() - datetime.timedelta(days=n)
-    d = ed - datetime.timedelta(days=ini_data["day_back"])
+    d = ed - datetime.timedelta(days=ini_data["day_back"]+2*epsimon+ad)
     return stfdate([d.year, d.month, d.day]), stfdate([d.year, ed.month, ed.day])
 
 
@@ -66,17 +68,26 @@ for i in range(len(ini_data["stocks"])):
 s_t, e_t = day_range()
 for i in range(len(ini_data["stocks"])):
     DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=s_t, end=e_t)
+    while len(DATA[ini_data["stocks"][i]])<30:
+        # input(len(DATA[ini_data["stocks"][i]]))
+        AD += 1
+        s_t, e_t = day_range(ad=AD)
+        DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=s_t, end=e_t)
 
 # 获取验证信息
-cs_t, ce_t = day_range(2)
+AD = 0
+cs_t, ce_t = day_range(BT)
 for i in range(len(ini_data["stocks"])):
     check_DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=cs_t, end=ce_t)
     while check_DATA[ini_data["stocks"][i]]["close"][2] == DATA[ini_data["stocks"][i]]["close"][2]:
         BT += 1
         check_DATA[ini_data["stocks"][i]].drop(check_DATA[ini_data["stocks"][i]].index.values[0], inplace = True)
         cs_t, ce_t = day_range(BT)
-        input(check_DATA[ini_data["stocks"][i]])
         check_DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=cs_t, end=ce_t)
-
+    while len(check_DATA[ini_data["stocks"][i]])<30:
+        AD += 1
+        cs_t, ce_t = day_range(BT, ad=AD) 
+        check_DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=cs_t, end=ce_t)
+    
 if __name__ == "__main__":
     print(DATA)

@@ -1,1 +1,1 @@
-{"kernel": "ESPM", "stocks": ["sh000905", "sz399006", "sz000922"], "day_back": 15, "EXPMA": 3263.5514528633134, "sec_EXPMA": 4166.208959297325, "tri_EXPMA": 4241.732543941036, "kind": ["ESPM", "VAR"]}
+{"kernel": "ESPM", "stocks": ["sh000905", "sz399006"], "day_back": 30, "EXPMA": 5457.227846371504, "sec_EXPMA": 5868.448991381905, "tri_EXPMA": 5897.117052255843, "kind": ["ESPM", "VAR"]}
