@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Aug 18 2018
 
-@author: Heshenghuan (heshenghuan@sina.com)
-http://github.com/heshenghuan
-"""
 
 from __future__ import print_function
-import time
+from time import time
 import numpy as np
 
 
@@ -32,7 +27,7 @@ class VectorAutoRegression(object):
             raise ValueError("log phase value p should be not lower than 1.")
 
         # 设置随机种子
-        np.random.seed(int(time.time()))
+        np.random.seed(int(time()))
 
         # 常数项
         self.c = np.random.rand(self.n, 1)

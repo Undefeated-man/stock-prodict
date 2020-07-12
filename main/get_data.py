@@ -27,11 +27,11 @@
 """
 
 
-import tushare as ts # 用于查历史数据
+# import tushare as ts
+from tushare import get_hist_data # 用于查历史数据
 #import easyquotation # 用于查询实时数据
-import json
-import time
-import datetime
+from json import loads
+from datetime import datetime, timedelta
 
 DATA = {}
 check_DATA = {}
@@ -47,47 +47,46 @@ def stfdate(ls):
 # 计算日期
 def day_range(n=0, ad=0):
     epsimon = ini_data["day_back"]//4 - 1
-    ed = datetime.datetime.now() - datetime.timedelta(days=n)
-    d = ed - datetime.timedelta(days=ini_data["day_back"]+2*epsimon+ad)
+    ed = datetime.now() - timedelta(days=n)
+    d = ed - timedelta(days=ini_data["day_back"]+2*epsimon+ad)
     return stfdate([d.year, d.month, d.day]), stfdate([d.year, ed.month, ed.day])
 
 
 
 # 读取json配置数据(股票代码，指数平滑预测观测时间)
-with open("ini.json", "r", encoding="utf-8") as j:
-    ini_data = json.loads(j.read())
+with open("../ini.json", "r", encoding="utf-8") as j:
+    ini_data = loads(j.read())
+    STOCKS = ini_data["stocks"]
 
 
 # 获取某只股票的全数据
-for i in range(len(ini_data["stocks"])):
-    FULL_DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i])
-# def full_data(id):
-    # return ts.get_hist_data(id)
+for i in range(len(STOCKS)):
+    FULL_DATA[STOCKS[i]] = get_hist_data(STOCKS[i])
+
 
 # 获取股票数据
 s_t, e_t = day_range()
-for i in range(len(ini_data["stocks"])):
-    DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=s_t, end=e_t)
-    while len(DATA[ini_data["stocks"][i]])<30:
-        # input(len(DATA[ini_data["stocks"][i]]))
+for i in range(len(STOCKS)):
+    DATA[STOCKS[i]] = FULL_DATA[STOCKS[i]][e_t:s_t]
+    while len(DATA[STOCKS[i]])<ini_data["day_back"]:
         AD += 1
         s_t, e_t = day_range(ad=AD)
-        DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=s_t, end=e_t)
+        DATA[STOCKS[i]] = FULL_DATA[STOCKS[i]][e_t:s_t]
 
 # 获取验证信息
 AD = 0
 cs_t, ce_t = day_range(BT)
-for i in range(len(ini_data["stocks"])):
-    check_DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=cs_t, end=ce_t)
-    while check_DATA[ini_data["stocks"][i]]["close"][2] == DATA[ini_data["stocks"][i]]["close"][2]:
+for i in range(len(STOCKS)):
+    check_DATA[STOCKS[i]] = FULL_DATA[STOCKS[i]][ce_t:cs_t]
+    while check_DATA[STOCKS[i]]["close"][2] == DATA[STOCKS[i]]["close"][2]:
         BT += 1
-        check_DATA[ini_data["stocks"][i]].drop(check_DATA[ini_data["stocks"][i]].index.values[0], inplace = True)
+        check_DATA[STOCKS[i]].drop(check_DATA[STOCKS[i]].index.values[0], inplace = True)
         cs_t, ce_t = day_range(BT)
-        check_DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=cs_t, end=ce_t)
-    while len(check_DATA[ini_data["stocks"][i]])<30:
+        check_DATA[STOCKS[i]] = FULL_DATA[STOCKS[i]][ce_t:cs_t]
+    while len(check_DATA[STOCKS[i]])<ini_data["day_back"]:
         AD += 1
         cs_t, ce_t = day_range(BT, ad=AD) 
-        check_DATA[ini_data["stocks"][i]] = ts.get_hist_data(ini_data["stocks"][i], start=cs_t, end=ce_t)
+        check_DATA[STOCKS[i]] = FULL_DATA[STOCKS[i]][ce_t:cs_t]
     
 if __name__ == "__main__":
     print(DATA)

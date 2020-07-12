@@ -1,1 +1,1 @@
-{"kernel": "ESPM", "stocks": ["sh000905", "sz399006"], "day_back": 30, "EXPMA": 5457.227846371504, "sec_EXPMA": 5868.448991381905, "tri_EXPMA": 5897.117052255843, "kind": ["ESPM", "VAR"]}
+{"kernel": "TAYLOR", "stocks": ["sh000905","sz399300"], "day_back": 30, "EXPMA": 5731.844704490451, "sec_EXPMA": 5754.877916283895, "tri_EXPMA": 5772.8679791441, "kind": ["ESPM", "VAR", "TAYLOR"], "training-times":5000, "comment":"建议training times配置为5000"}

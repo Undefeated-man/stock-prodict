@@ -27,12 +27,10 @@
 """
 
 
-import pandas
+# import pandas
 import get_data as gdt
-import sys
 import numpy as np
-import matplotlib.pyplot as plt
-# import codecs as cs
+from matplotlib import pyplot as plt
 from var import VectorAutoRegression
 
 g_list = [0, 1, 1.285, 1.64, 1.96, 2.575, 3, 10]
@@ -42,6 +40,17 @@ T = 1 # 未来T天内的预测结果,默认T为2
 N = 1
 SCALE = 1000
 
+# 回测精度(data注意倒序)
+def f_score(data, pre_data):
+    pre = ((pre_data[:-1] - pre_data[1:])>0)[1:] # True是预测升
+    real = (data[:-2] - data[1:-1])>0 # True是真升
+    tp = np.sum(np.in1d(np.where(pre == True)[0], np.where(pre == real)[0]))
+    fn = np.sum(np.in1d(np.where(pre == False)[0], np.where(pre != real)[0]))
+    fp = np.sum(np.in1d(np.where(pre == True)[0], np.where(pre != real)[0]))
+    recall = tp/(tp + fn) # 真正/(真正+假反)
+    precision = tp/(tp + fp) # 真正/(真正+假正)
+    F_score = 2 * recall * precision/(recall + precision)
+    return F_score*100
 
 # 用高斯分布3sigma原则估计预测可信度
 def gaussian_p(x, data, id):
@@ -52,15 +61,14 @@ def gaussian_p(x, data, id):
     dz_score = (d[0] - d.mean())/d.std()
     if abs(z_score) > 50:
         print(z_score)
-        print("\n\t%s\n\n\t\t警告！！此次预测结果偏离中心较远，可能准确率较低，请注意！\n\n\t%s" % ("!!"*25, "!!"*25))
+        print("\n\t%s\n\n\t\t警告！！此次生成的模型稳定性较低，请注意！\n\n\t%s" % ("!!"*25, "!!"*25))
     else:
         for i in g_list:
             if abs(dz_score) < i:
-                print("\n\t代码%s的股票: 根据高斯导数验证模型估计, 预测准确率约为%s%%"%(id, p_list[g_list.index(i)-1]))
+                print("\n\t代码%s的股票: 根据高斯导数验证模型估计, 模型稳定性约为%s%%"%(id, p_list[g_list.index(i)-1]))
                 break
             elif abs(dz_score) >= 10 and i == 10:
-                print("\n\t%s\n\n\t\t警告！！拟合失败，此次预测结果准确率较低，请注意！\n\n\t%s" % ("!!"*25, "!!"*25))   
-    print("\n\t\t关闭图片窗口进入下一个预测\n\n%s\n"%("~~"*40))
+                print("\n\t%s\n\n\t\t警告！！拟合失败，此次生成的模型稳定性较低，请注意！\n\n\t%s" % ("!!"*25, "!!"*25))   
 
 # 一次指数平滑预测法
 def first_exp(data):
@@ -155,14 +163,14 @@ def var(args, id):
     x = x / SCALE  # scale
     y = y / SCALE  # scale
     model = VectorAutoRegression(n=N, P=log_phaseP)
-    model.fit(x, y, 1e-5, 1000, 1e-4)
+    model.fit(x, y, 1e-5, gdt.ini_data["training-times"], 1e-4)
     predict = model.predict(x)
     predict *= SCALE
-    return predict[-1, 0, 0]
+    return predict[:, 0, 0]
 
 
 # 作图器
-def plot2d(x_lst, y_lst, data, name_lst=["real data"], n_sub=(11), title=None):
+def plot2d(x_lst, y_lst, data, name_lst=["real data", "predict"], n_sub=(11), title=None):
 
     """
     
